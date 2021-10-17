@@ -2,7 +2,6 @@ package statistics
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -12,14 +11,9 @@ import (
 
 const articleType = "statistics_article_view_content"
 
-type countData struct {
-	Count string `json:"count"`
-	Ref   string `json:"ref"`
-}
-
 type intervalCount struct {
 	Reference string `json:"reference"`
-	RowCount  string `json:"count"`
+	RowCount  int64  `json:"count"`
 }
 
 type attributes struct {
@@ -35,6 +29,10 @@ type statisticsAPIResponse struct {
 	ResponseData statisticsResponseData `json:"data"`
 }
 
+type rowCount struct {
+	Count int64
+}
+
 /*
 * GET API
 * endpoint /counter/v1/statistics/article_id/{article_id}
@@ -43,20 +41,19 @@ func ShowStatistics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	inputMapCount := params["article_id"]
-	fmt.Println(inputMapCount)
-	var statisticsResponseData statisticsResponseData
-	var statisticsAPIResponse statisticsAPIResponse
-	intervals := []string{"300 MIN", "10 HOUR", "2 DAY"}
-	// fmt.Println(intervals)
 
+	var statisticsAPIResponse statisticsAPIResponse
+	var statisticsResponseData statisticsResponseData
 	var result attributes
 	var row intervalCount
-	var count string
+	var count rowCount
+
+	intervals := []string{"420 MINUTE", "10 HOUR", "2 DAY"}
+
 	for _, v := range intervals {
-		fmt.Println(v)
-		mta_db.Client.Raw("SELECT count(article_id) AS count FROM view_maps WHERE article_id = ? AND date_time >= NOW() - INTERVAL "+v+" ;", "abc").Scan(&count)
-		row.RowCount = count
-		row.Reference = v
+		mta_db.Client.Raw("SELECT count(article_id) AS count FROM view_maps WHERE article_id = ? AND date_time >= NOW() - INTERVAL "+v+" ;", inputMapCount).Scan(&count)
+		row.RowCount = count.Count
+		row.Reference = v + " ago"
 		result.Attributes = append(result.Attributes, row)
 	}
 	statisticsResponseData.ArticleId = inputMapCount
