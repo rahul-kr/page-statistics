@@ -33,6 +33,13 @@ type rowCount struct {
 	Count int64
 }
 
+type postRequestData struct {
+	ArticleId string `json:"article_id"`
+}
+type postStatisticsAPIResponse struct {
+	ResponseData postRequestData `json:"data"`
+}
+
 /*
 * GET API
 * endpoint /counter/v1/statistics/article_id/{article_id}
@@ -48,7 +55,7 @@ func ShowStatistics(w http.ResponseWriter, r *http.Request) {
 	var row intervalCount
 	var count rowCount
 
-	intervals := []string{"420 MINUTE", "10 HOUR", "2 DAY"}
+	intervals := []string{"5 MINUTE", "1 HOUR", "2 DAY", "3 DAY"}
 
 	for _, v := range intervals {
 		mta_db.Client.Raw("SELECT count(article_id) AS count FROM view_maps WHERE article_id = ? AND date_time >= NOW() - INTERVAL "+v+" ;", inputMapCount).Scan(&count)
@@ -78,10 +85,10 @@ func InsertStatistics(w http.ResponseWriter, r *http.Request) {
 	// Insert into table
 	mta_db.Client.Create(&viewMap)
 	//prepare response
-	var statisticsResponseData statisticsResponseData
-	var statisticsAPIResponse statisticsAPIResponse
+	var postRequestData postRequestData
+	var postStatisticsAPIResponse postStatisticsAPIResponse
 	w.Header().Set("Content-Type", "application/json")
-	statisticsResponseData.ArticleId = viewMap.ArticleId
-	statisticsAPIResponse.ResponseData = statisticsResponseData
-	json.NewEncoder(w).Encode(statisticsAPIResponse)
+	postRequestData.ArticleId = viewMap.ArticleId
+	postStatisticsAPIResponse.ResponseData = postRequestData
+	json.NewEncoder(w).Encode(postStatisticsAPIResponse)
 }

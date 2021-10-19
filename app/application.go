@@ -13,5 +13,5 @@ var router = mux.NewRouter()
 func StartApplication() {
 	mapUrls()
 	log.Println("about to start the application...")
-	log.Fatal(http.ListenAndServe(":8072", router))
+	log.Fatal(http.ListenAndServe(":8888", router))
 }
